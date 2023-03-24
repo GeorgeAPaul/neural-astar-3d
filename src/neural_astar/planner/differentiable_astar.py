@@ -226,7 +226,7 @@ class DifferentiableAstar(nn.Module):
 
             # open neighboring nodes, add them to the openlist if they satisfy certain requirements
             neighbor_nodes = expand(selected_node_maps, neighbor_filter)
-            neighbor_nodes = neighbor_nodes * obstacles_maps
+            #neighbor_nodes = neighbor_nodes * obstacles_maps
 
             # update g if one of the following conditions is met
             # 1) neighbor is not in the close list (1 - histories) nor in the open list (1 - open_maps)
