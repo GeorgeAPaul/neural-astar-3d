@@ -134,7 +134,7 @@ def solve_single(
         close_list.additem(idx_selected, f_selected)
         for idx_nei in get_neighbor_indices(idx_selected, H, W):
 
-            if map_design_vct[idx_nei] == 1:
+            #if map_design_vct[idx_nei] == 1:
                 f_new = (
                     f_selected
                     - (1 - g_ratio)
