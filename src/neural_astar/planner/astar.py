@@ -68,7 +68,7 @@ class VanillaAstar(nn.Module):
             store_intermediate_results,
         )
 
-        return astar_outputs
+        return astar_outputs, map_designs
 
     def forward(
         self,
