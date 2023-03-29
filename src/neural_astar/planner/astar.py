@@ -199,7 +199,7 @@ class NeuralAstar(VanillaAstar):
             AstarOutput: search histories and solution paths, and optionally intermediate search results.
         """
 
-        cost_maps = map_designs + self.encode(map_designs, start_maps, goal_maps)
+        cost_maps = map_designs/torch.max(map_designs) + self.encode(map_designs, start_maps, goal_maps)
         obstacles_maps = (
             map_designs if not self.learn_obstacles else torch.ones_like(start_maps)
         )
