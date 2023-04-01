@@ -199,9 +199,17 @@ class NeuralAstar(VanillaAstar):
             AstarOutput: search histories and solution paths, and optionally intermediate search results.
         """
 
-        encoded_cost = self.encode(map_designs, start_maps, goal_maps)
+        encoded_cost = self.encode(map_designs/torch.max(map_designs), start_maps, goal_maps)
+        #print("Encoded cost min" + str(torch.min(encoded_cost)))
+        print("Encoded cost max" + str(torch.max(encoded_cost)))
+
         encoded_sum = map_designs + encoded_cost * torch.max(map_designs)
+        #print("Encoded sum min" + str(torch.min(encoded_sum)))
+        #print("Encoded sum max" + str(torch.max(encoded_sum)))
+
         cost_maps = (encoded_sum/torch.max(encoded_sum)) * torch.max(map_designs)
+        #print("Cost maps min" +str(torch.min(cost_maps)))
+        #print("Cost maps max" +str(torch.max(cost_maps)))
         obstacles_maps = (
             map_designs if not self.learn_obstacles else torch.ones_like(start_maps)
         )
