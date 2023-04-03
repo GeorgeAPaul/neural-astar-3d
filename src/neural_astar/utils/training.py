@@ -55,7 +55,7 @@ class PlannerModule(pl.LightningModule):
     def training_step(self, train_batch, batch_idx):
         map_designs, start_maps, goal_maps, opt_trajs = train_batch
         outputs = self.forward(map_designs, start_maps, goal_maps)
-        loss = nn.L1Loss()(outputs.histories, opt_trajs)
+        loss = nn.L1Loss()(outputs[0].histories, opt_trajs)
         self.log("metrics/train_loss", loss)
 
         return loss
@@ -63,19 +63,19 @@ class PlannerModule(pl.LightningModule):
     def validation_step(self, val_batch, batch_idx):
         map_designs, start_maps, goal_maps, opt_trajs = val_batch
         outputs = self.forward(map_designs, start_maps, goal_maps)
-        loss = nn.L1Loss()(outputs.histories, opt_trajs)
+        loss = nn.L1Loss()(outputs[0].histories, opt_trajs)
 
         self.log("metrics/val_loss", loss)
 
         # For shortest path problems:
         if map_designs.shape[1] == 1:
             va_outputs = self.vanilla_astar(map_designs, start_maps, goal_maps)
-            pathlen_astar = va_outputs.paths.sum((1, 2, 3)).detach().cpu().numpy()
-            pathlen_model = outputs.paths.sum((1, 2, 3)).detach().cpu().numpy()
+            pathlen_astar = va_outputs[0].paths.sum((1, 2, 3)).detach().cpu().numpy()
+            pathlen_model = outputs[0].paths.sum((1, 2, 3)).detach().cpu().numpy()
             p_opt = (pathlen_astar == pathlen_model).mean()
 
-            exp_astar = va_outputs.histories.sum((1, 2, 3)).detach().cpu().numpy()
-            exp_na = outputs.histories.sum((1, 2, 3)).detach().cpu().numpy()
+            exp_astar = va_outputs[0].histories.sum((1, 2, 3)).detach().cpu().numpy()
+            exp_na = outputs[0].histories.sum((1, 2, 3)).detach().cpu().numpy()
             p_exp = np.maximum((exp_astar - exp_na) / exp_astar, 0.0).mean()
 
             h_mean = 2.0 / (1.0 / (p_opt + 1e-10) + 1.0 / (p_exp + 1e-10))
