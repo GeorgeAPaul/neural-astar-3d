@@ -210,7 +210,7 @@ class NeuralAstar(VanillaAstar):
         #print("Encoded sum min" + str(torch.min(encoded_sum)))
         #print("Encoded sum max" + str(torch.max(encoded_sum)))
 
-        cost_maps = encoded_sum#(encoded_sum/torch.max(encoded_sum)) * torch.max(map_designs)
+        cost_maps = encoded_sum/torch.max(encoded_sum)# * torch.max(map_designs)
         #print("Cost maps min" +str(torch.min(cost_maps)))
         #print("Cost maps max" +str(torch.max(cost_maps)))
         obstacles_maps = (
