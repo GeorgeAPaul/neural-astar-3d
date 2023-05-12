@@ -78,13 +78,13 @@ def get_neighbor_indices(idx: int, H: int, W: int, D: int) -> np.array:
         neighbor_indices.append(idx - W * H + 1 + W)
     return np.array(neighbor_indices)
 
-def compute_chebyshev_distance(idx: int, goal_idx: int, W: int) -> float:
+def compute_chebyshev_distance(idx: int, goal_idx: int, W: int, H: int) -> float:
     """Compute chebyshev heuristic"""
 
-    loc = np.array([idx % W, idx // W])
-    goal_loc = np.array([goal_idx % W, goal_idx // W])
-    dxdy = np.abs(loc - goal_loc)
-    h = dxdy.sum() - dxdy.min()
+    loc = np.array([idx % W, idx // W % H, idx // (W * H)])
+    goal_loc = np.array([goal_idx % W, goal_idx // W % H, goal_idx // (W * H)])
+    dxdydz = np.abs(loc - goal_loc)
+    h = dxdydz.sum() - dxdydz.min()
     euc = np.sqrt(((loc - goal_loc) ** 2).sum())
     return h + 0.001 * euc
 
