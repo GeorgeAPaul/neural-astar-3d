@@ -78,9 +78,6 @@ def get_neighbor_indices(idx: int, H: int, W: int, D: int) -> np.array:
         neighbor_indices.append(idx - W * H + 1 + W)
     return np.array(neighbor_indices)
 
-results = get_neighbor_indices(34, 5, 5, 3)
-
-
 def compute_chebyshev_distance(idx: int, goal_idx: int, W: int) -> float:
     """Compute chebyshev heuristic"""
 
