@@ -12,7 +12,7 @@ from pqdict import pqdict
 from .differentiable_astar import AstarOutput
 
 
-def get_neighbor_indices(idx: int, H: int, W: int) -> np.array:
+def get_neighbor_indices(idx: int, H: int, W: int, D: int) -> np.array:
     """Get neighbor indices"""
 
     neighbor_indices = []
@@ -22,18 +22,63 @@ def get_neighbor_indices(idx: int, H: int, W: int) -> np.array:
         neighbor_indices.append(idx + 1)
     if idx // W - 1 >= 0:
         neighbor_indices.append(idx - W)
-    if idx // W + 1 < H:
+    if idx // W % H + 1 < H:#
         neighbor_indices.append(idx + W)
     if (idx % W - 1 >= 0) & (idx // W - 1 >= 0):
         neighbor_indices.append(idx - W - 1)
     if (idx % W + 1 < W) & (idx // W - 1 >= 0):
         neighbor_indices.append(idx - W + 1)
-    if (idx % W - 1 >= 0) & (idx // W + 1 < H):
+    if (idx % W - 1 >= 0) & (idx // W % H + 1 < H):#
         neighbor_indices.append(idx + W - 1)
-    if (idx % W + 1 < W) & (idx // W + 1 < H):
+    if (idx % W + 1 < W) & (idx // W % H + 1 < H):#
         neighbor_indices.append(idx + W + 1)
-
+    #3d additions
+    #forwards and backwards
+    if (idx + W * H < H * W * D):
+        neighbor_indices.append(idx + W * H)
+    if (idx - W * H >= 0):
+        neighbor_indices.append(idx - W * H)
+    #forwards l/r
+    if (idx + W * H < H * W * D) & (idx % W - 1 >= 0):
+        neighbor_indices.append(idx + W * H - 1)
+    if (idx + W * H < H * W * D) & (idx % W + 1 < W):
+        neighbor_indices.append(idx + W * H + 1)
+    #forwards u/d
+    if (idx + W * H < H * W * D) & (idx // W - 1 >= 0):
+        neighbor_indices.append(idx + W * H - W)
+    if (idx + W * H < H * W * D) & (idx // W % H + 1 < H):#
+        neighbor_indices.append(idx + W * H + W)
+    #forwards diagonals
+    if (idx + W * H < H * W * D) & (idx % W - 1 >= 0) & (idx // W - 1 >= 0):
+        neighbor_indices.append(idx + W * H - 1 - W)
+    if (idx + W * H < H * W * D) & (idx % W + 1 < W) & (idx // W - 1 >= 0):
+        neighbor_indices.append(idx + W * H + 1 - W)
+    if (idx + W * H < H * W * D) & (idx % W - 1 >= 0) & (idx // W % H + 1 < H):#
+        neighbor_indices.append(idx + W * H - 1 + W)
+    if (idx + W * H < H * W * D) & (idx % W + 1 < W) & (idx // W % H + 1 < H):#
+        neighbor_indices.append(idx + W * H + 1 + W)
+    #backwards l/r
+    if (idx - W * H >= 0) & (idx % W - 1 >= 0):
+        neighbor_indices.append(idx - W * H - 1)
+    if (idx - W * H >= 0) & (idx % W + 1 < W):
+        neighbor_indices.append(idx - W * H + 1)
+    #backwards u/d
+    if (idx - W * H >= 0) & (idx // W - 1 >= 0):
+        neighbor_indices.append(idx - W * H - W)
+    if (idx - W * H >= 0) & (idx // W % H + 1 < H):#
+        neighbor_indices.append(idx - W * H + W)
+    #backwards diagonals
+    if (idx - W * H >= 0) & (idx % W - 1 >= 0) & (idx // W - 1 >= 0):
+        neighbor_indices.append(idx - W * H - 1 - W)
+    if (idx - W * H >= 0) & (idx % W + 1 < W) & (idx // W - 1 >= 0):
+        neighbor_indices.append(idx - W * H + 1 - W)
+    if (idx - W * H >= 0) & (idx % W - 1 >= 0) & (idx // W % H + 1 < H):#
+        neighbor_indices.append(idx - W * H - 1 + W)
+    if (idx - W * H >= 0) & (idx % W + 1 < W) & (idx // W % H + 1 < H):#
+        neighbor_indices.append(idx - W * H + 1 + W)
     return np.array(neighbor_indices)
+
+results = get_neighbor_indices(34, 5, 5, 3)
 
 
 def compute_chebyshev_distance(idx: int, goal_idx: int, W: int) -> float:
@@ -113,7 +158,7 @@ def solve_single(
 ) -> list:
     """Solve a single problem"""
 
-    H, W = map_design.shape
+    H, W, D = map_design.shape
     start_idx = np.argwhere(start_map.flatten()).item()
     goal_idx = np.argwhere(goal_map.flatten()).item()
     map_design_vct = map_design.flatten()
@@ -132,7 +177,7 @@ def solve_single(
         num_steps += 1
         idx_selected, f_selected = open_list.popitem()
         close_list.additem(idx_selected, f_selected)
-        for idx_nei in get_neighbor_indices(idx_selected, H, W):
+        for idx_nei in get_neighbor_indices(idx_selected, H, W, D):
 
             #if map_design_vct[idx_nei] == 1:
                 f_new = (
