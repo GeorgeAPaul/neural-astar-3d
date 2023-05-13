@@ -89,17 +89,17 @@ def compute_chebyshev_distance(idx: int, goal_idx: int, W: int, H: int) -> float
     return h + 0.001 * euc
 
 
-def get_history(close_list: list, H: int, W: int) -> np.array:
+def get_history(close_list: list, H: int, W: int, D: int) -> np.array:
     """Get search history"""
 
-    history = np.array([[idx % W, idx // W] for idx in close_list.keys()])
-    history_map = np.zeros((H, W))
-    history_map[history[:, 1], history[:, 0]] = 1
+    history = np.array([[idx % W, idx // W % H, idx // (W * H)] for idx in close_list.keys()])
+    history_map = np.zeros((H, W, D))
+    history_map[history[:, 1], history[:, 0], ] = 1
 
     return history_map
 
 
-def backtrack(parent_list: list, goal_idx: int, H: int, W: int) -> np.array:
+def backtrack(parent_list: list, goal_idx: int, H: int, W: int, D: int) -> np.array:
     """Backtrack to obtain path"""
 
     current_idx = goal_idx
@@ -180,9 +180,9 @@ def solve_single(
                 f_new = (
                     f_selected
                     - (1 - g_ratio)
-                    * compute_chebyshev_distance(idx_selected, goal_idx, W)
+                    * compute_chebyshev_distance(idx_selected, goal_idx, W, H)
                     + g_ratio * pred_cost_vct[idx_nei]
-                    + (1 - g_ratio) * compute_chebyshev_distance(idx_nei, goal_idx, W)
+                    + (1 - g_ratio) * compute_chebyshev_distance(idx_nei, goal_idx, W, H)
                 )
 
                 # conditions for the nodes not yet in the open list nor closed list
@@ -199,6 +199,6 @@ def solve_single(
                         open_list[idx_nei] = f_new
                     parent_list[idx_nei] = idx_selected
 
-    history_map = get_history(close_list, H, W)
-    path_map = backtrack(parent_list, goal_idx, H, W)
+    history_map = get_history(close_list, H, W, D)
+    path_map = backtrack(parent_list, goal_idx, H, W, D)
     return history_map, path_map
