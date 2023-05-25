@@ -94,7 +94,7 @@ def get_history(close_list: list, H: int, W: int, D: int) -> np.array:
 
     history = np.array([[idx % W, idx // W % H, idx // (W * H)] for idx in close_list.keys()])
     history_map = np.zeros((H, W, D))
-    history_map[history[:, 1], history[:, 0], history[:, 2]] = 1
+    history_map[history[:, 0], history[:, 1], history[:, 2]] = 1
 
     return history_map
 
@@ -109,7 +109,7 @@ def backtrack(parent_list: list, goal_idx: int, H: int, W: int, D: int) -> np.ar
         current_idx = parent_list[current_idx]
     path = np.array(path)
     path_map = np.zeros((H, W, D))
-    path_map[path[:, 1], path[:, 0], path[:, 2]] = 1
+    path_map[path[:, 0], path[:, 1], path[:, 2]] = 1
 
     return path_map
 
