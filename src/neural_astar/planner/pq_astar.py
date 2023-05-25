@@ -4,12 +4,21 @@ Affiliation: OSX
 """
 
 from __future__ import annotations
+from typing import List, NamedTuple, Optional
 
 import numpy as np
 import torch
 from pqdict import pqdict
 
-from .differentiable_astar import AstarOutput
+
+class AstarOutput(NamedTuple):
+    """
+    Output structure of A* search planners
+    """
+
+    histories: torch.tensor
+    paths: torch.tensor
+    intermediate_results: Optional[List[dict]] = None
 
 
 def get_neighbor_indices(idx: int, H: int, W: int, D: int) -> np.array:
@@ -20,13 +29,13 @@ def get_neighbor_indices(idx: int, H: int, W: int, D: int) -> np.array:
         neighbor_indices.append(idx - 1)
     if idx % W + 1 < W:
         neighbor_indices.append(idx + 1)
-    if idx // W - 1 >= 0:
+    if idx // W % H - 1 >= 0:
         neighbor_indices.append(idx - W)
     if idx // W % H + 1 < H:#
         neighbor_indices.append(idx + W)
-    if (idx % W - 1 >= 0) & (idx // W - 1 >= 0):
+    if (idx % W - 1 >= 0) & (idx // W % H - 1 >= 0):
         neighbor_indices.append(idx - W - 1)
-    if (idx % W + 1 < W) & (idx // W - 1 >= 0):
+    if (idx % W + 1 < W) & (idx // W % H - 1 >= 0):
         neighbor_indices.append(idx - W + 1)
     if (idx % W - 1 >= 0) & (idx // W % H + 1 < H):#
         neighbor_indices.append(idx + W - 1)
@@ -44,14 +53,14 @@ def get_neighbor_indices(idx: int, H: int, W: int, D: int) -> np.array:
     if (idx + W * H < H * W * D) & (idx % W + 1 < W):
         neighbor_indices.append(idx + W * H + 1)
     #forwards u/d
-    if (idx + W * H < H * W * D) & (idx // W - 1 >= 0):
+    if (idx + W * H < H * W * D) & (idx // W % H - 1 >= 0):
         neighbor_indices.append(idx + W * H - W)
     if (idx + W * H < H * W * D) & (idx // W % H + 1 < H):#
         neighbor_indices.append(idx + W * H + W)
     #forwards diagonals
-    if (idx + W * H < H * W * D) & (idx % W - 1 >= 0) & (idx // W - 1 >= 0):
+    if (idx + W * H < H * W * D) & (idx % W - 1 >= 0) & (idx // W % H - 1 >= 0):
         neighbor_indices.append(idx + W * H - 1 - W)
-    if (idx + W * H < H * W * D) & (idx % W + 1 < W) & (idx // W - 1 >= 0):
+    if (idx + W * H < H * W * D) & (idx % W + 1 < W) & (idx // W % H - 1 >= 0):
         neighbor_indices.append(idx + W * H + 1 - W)
     if (idx + W * H < H * W * D) & (idx % W - 1 >= 0) & (idx // W % H + 1 < H):#
         neighbor_indices.append(idx + W * H - 1 + W)
@@ -63,14 +72,14 @@ def get_neighbor_indices(idx: int, H: int, W: int, D: int) -> np.array:
     if (idx - W * H >= 0) & (idx % W + 1 < W):
         neighbor_indices.append(idx - W * H + 1)
     #backwards u/d
-    if (idx - W * H >= 0) & (idx // W - 1 >= 0):
+    if (idx - W * H >= 0) & (idx // W % H - 1 >= 0):
         neighbor_indices.append(idx - W * H - W)
     if (idx - W * H >= 0) & (idx // W % H + 1 < H):#
         neighbor_indices.append(idx - W * H + W)
     #backwards diagonals
-    if (idx - W * H >= 0) & (idx % W - 1 >= 0) & (idx // W - 1 >= 0):
+    if (idx - W * H >= 0) & (idx % W - 1 >= 0) & (idx // W % H - 1 >= 0):
         neighbor_indices.append(idx - W * H - 1 - W)
-    if (idx - W * H >= 0) & (idx % W + 1 < W) & (idx // W - 1 >= 0):
+    if (idx - W * H >= 0) & (idx % W + 1 < W) & (idx // W % H - 1 >= 0):
         neighbor_indices.append(idx - W * H + 1 - W)
     if (idx - W * H >= 0) & (idx % W - 1 >= 0) & (idx // W % H + 1 < H):#
         neighbor_indices.append(idx - W * H - 1 + W)
@@ -94,7 +103,7 @@ def get_history(close_list: list, H: int, W: int, D: int) -> np.array:
 
     history = np.array([[idx % W, idx // W % H, idx // (W * H)] for idx in close_list.keys()])
     history_map = np.zeros((H, W, D))
-    history_map[history[:, 1], history[:, 0], ] = 1
+    history_map[history[:, 1], history[:, 0], history[:, 2]] = 1
 
     return history_map
 
@@ -105,11 +114,11 @@ def backtrack(parent_list: list, goal_idx: int, H: int, W: int, D: int) -> np.ar
     current_idx = goal_idx
     path = []
     while current_idx != None:
-        path.append([current_idx % W, current_idx // W])
+        path.append([current_idx % W, current_idx // W % H, current_idx // (W * H)])
         current_idx = parent_list[current_idx]
     path = np.array(path)
-    path_map = np.zeros((H, W))
-    path_map[path[:, 1], path[:, 0]] = 1
+    path_map = np.zeros((H, W, D))
+    path_map[path[:, 1], path[:, 0], path[:, 2]] = 1
 
     return path_map
 
@@ -156,15 +165,18 @@ def solve_single(
     """Solve a single problem"""
 
     H, W, D = map_design.shape
-    start_idx = np.argwhere(start_map.flatten()).item()
-    goal_idx = np.argwhere(goal_map.flatten()).item()
-    map_design_vct = map_design.flatten()
-    pred_cost_vct = pred_cost.flatten()
+    start_idx = np.argwhere(start_map.flatten('F')).item()
+    goal_idx = np.argwhere(goal_map.flatten('F')).item()
+    map_design_vct = map_design.flatten('F')
+    pred_cost_vct = pred_cost.flatten('F')
     open_list = pqdict()
     close_list = pqdict()
     open_list.additem(start_idx, 0)
     parent_list = dict()
     parent_list[start_idx] = None
+
+    #print(start_idx)
+    #print(goal_idx)
 
     num_steps = 0
     while goal_idx not in close_list:
@@ -173,6 +185,7 @@ def solve_single(
             return np.zeros_like(goal_map), np.zeros_like(goal_map)
         num_steps += 1
         idx_selected, f_selected = open_list.popitem()
+        #print(idx_selected)
         close_list.additem(idx_selected, f_selected)
         for idx_nei in get_neighbor_indices(idx_selected, H, W, D):
 
