@@ -4,21 +4,12 @@ Affiliation: OSX
 """
 
 from __future__ import annotations
-from typing import List, NamedTuple, Optional
 
 import numpy as np
 import torch
 from pqdict import pqdict
 
-
-class AstarOutput(NamedTuple):
-    """
-    Output structure of A* search planners
-    """
-
-    histories: torch.tensor
-    paths: torch.tensor
-    intermediate_results: Optional[List[dict]] = None
+from .differentiable_astar import AstarOutput
 
 
 def get_neighbor_indices(idx: int, H: int, W: int, D: int) -> np.array:
