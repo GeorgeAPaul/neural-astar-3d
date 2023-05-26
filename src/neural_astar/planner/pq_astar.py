@@ -84,7 +84,7 @@ def compute_chebyshev_distance(idx: int, goal_idx: int, W: int, H: int) -> float
     loc = np.array([idx % W, idx // W % H, idx // (W * H)])
     goal_loc = np.array([goal_idx % W, goal_idx // W % H, goal_idx // (W * H)])
     dxdydz = np.abs(loc - goal_loc)
-    h = dxdydz.sum() - dxdydz.min()
+    h = dxdydz.max()
     euc = np.sqrt(((loc - goal_loc) ** 2).sum())
     return h + 0.001 * euc
 
