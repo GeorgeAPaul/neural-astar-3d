@@ -72,8 +72,8 @@ class CNN(EncoderBase):
         channels = [input_dim] + self.CHANNELS[:encoder_depth] + [1]
         blocks = []
         for i in range(len(channels) - 1):
-            blocks.append(nn.Conv2d(channels[i], channels[i + 1], 3, 1, 1))
-            blocks.append(nn.BatchNorm2d(channels[i + 1]))
+            blocks.append(nn.Conv3d(channels[i], channels[i + 1], 3, 1, 1))
+            blocks.append(nn.BatchNorm3d(channels[i + 1]))
             blocks.append(nn.ReLU())
         return nn.Sequential(*blocks[:-1])
 
