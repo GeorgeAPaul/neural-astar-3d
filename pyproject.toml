@@ -9,7 +9,7 @@ package-dir = {"" = "src"}
 name = "neural_astar"
 requires-python = ">=3.8"
 dependencies = [
-    "torch==1.12.1",
+    "torch==1.13.1+cu117",
     "torchvision==0.13.1",
     "segmentation-models-pytorch==0.3.1",
     "pqdict==1.2.0",
